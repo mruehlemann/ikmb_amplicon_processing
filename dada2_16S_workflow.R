@@ -83,6 +83,9 @@ plotQualityProfile(filtFs[1:2])
 plotQualityProfile(filtRs[1:2])
 dev.off()
 
+exists <- file.exists(filtFs) & file.exists(filtRs)
+filtFs <- filtFs[exists]
+filtRs <- filtRs[exists]
 
 #########################
 ## Learn the Error Rates
@@ -116,6 +119,8 @@ dev.off()
 ## Dereplicate the filtered fastq files
 derepRs <- derepFastq(filtRs, verbose=TRUE)
 derepFs <- derepFastq(filtFs, verbose=TRUE)
+
+sample.names=sample.names[exists]
 
 # Name the derep-class objects by the sample names
 names(derepFs) <- sample.names
@@ -167,7 +172,7 @@ saveRDS(seqtab.nochim, paste0(outdir,"/seqtab_nochim.Rds"))
 ## Track reads through the pipeline
 ####################################
 getN <- function(x) sum(getUniques(x))
-track <- cbind(out, sapply(dadaFs, getN), sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
+track <- cbind(out[exists,], sapply(dadaFs, getN), sapply(m2, getN), rowSums(seqtab), rowSums(seqtab.nochim))
 # If processing a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
 colnames(track) <- c("input", "filtered", "denoised", "merged", "tabled", "nonchim")
 rownames(track) <- sample.names
@@ -185,4 +190,3 @@ colnames(taxHS) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus")
 
 
 write.table(taxHS, file = paste0(outdir,"/taxa_SV.tsv"), quote=FALSE)
-
